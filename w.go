@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	_ "embed"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
@@ -13,10 +14,24 @@ import (
 	"strings"
 )
 
+//go:embed readme
+var help string
+
 func main() {
-	var stdin io.Reader = os.Stdin
-	kout := len(os.Args) == 2 && os.Args[1] == "-k"
-	m, tab, data := run(stdin)
+	var kout bool
+	a := os.Args[1:]
+	if len(a) == 0 || a[0] == "-h" {
+		println(help)
+		return
+	}
+	if a[0] == "-k" {
+		a, kout = a[1:], true
+	}
+	b, e := os.ReadFile(a[0])
+	if e != nil {
+		panic(e)
+	}
+	m, tab, data := run(bytes.NewReader(b))
 	if kout {
 		os.Stdout.Write(m.kout(tab, data))
 	} else {
